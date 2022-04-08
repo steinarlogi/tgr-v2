@@ -3,10 +3,75 @@
     <head>
         <meta charset="utf-8">
         <title>Pakkmann</title>
+        <style>
+
+            body {
+                margin: 0;
+            }
+
+            canvas {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
+
+            #points {
+                position: absolute;
+                top: 10px;
+                width: 100%;
+                text-align: center;
+                z-index: 100;
+                display:block;
+                color: white;
+            }
+
+            #lives {
+                position: absolute;
+                top: 30px;
+                width: 100%;
+                text-align: center;
+                z-index: 100;
+                display:block;
+                color: white;
+            }
+
+            #menu {
+                min-width: 200px;
+                min-height: 200px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-direction: column;
+                margin: auto;
+                left: 40%;
+                position: absolute;
+                top: 20%;
+                background: #FFFfaa;
+                padding: 16px;
+            }
+
+            #menu > button {
+                max-height: 20px;
+                margin: auto;
+            }
+
+        </style>
     </head>
     <body>
-        <main>
-            <h1>Þetta er vefsíðan!</h1>
-        </main>
+        <script src="js/three.js"></script>
+        <script src="js/level1.js"></script>
+        <script src="js/utils.js"></script>
+        <script src="js/Enemy.js"></script>
+        <script src="js/Pacman.js"></script>
+
+        <div id="lives">Líf: 3</div>
+        <div id="points">Stig: 0</div>
+
+
+        <div id="menu">
+            <h1 id="menu-header" >Pakkmann</h1>
+            <button onclick="startNewGame()">Spila aftur</button>
+        </div>
     </body>
 </html>

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "browser-sync --server --files *.html",
+    "dev": "browser-sync start --server --files *.html ./js/Pacman.js ./js/Level1.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
