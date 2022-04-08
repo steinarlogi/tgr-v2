@@ -34,10 +34,11 @@ let enemies = [];
 // Reyni að ná smooth hreyfingu myndavélarinnar
 let cameraPositionX = 0;
 let cameraPositionY = 0;
-let cameraAcceleration = 0.001;
-let cameraDeacceleration = 0.005
-let currentCameraSpeedX = 0;
-let currentCameraSpeedY = 0;
+
+let origX = 0;
+let rotation = 0;
+
+let viewPoint = 0;
 
 // Fylki sem geymir alla veggi í borðinu
 let wallMeshes = [];
@@ -124,6 +125,18 @@ window.onload = function init() {
             case 83: // s fyrir debug
                 enemy.moveTo(0, 0)
                 break;
+
+            case 82: // r fyrir viewpoint 0
+                setViewPoint(0);
+                break;
+
+            case 84: //t fyrir viewpoint 1
+                setViewPoint(1);
+                break;
+
+            case 89: // y fyrir viewpoint 2
+                setViewPoint(2);
+                break;
         }
     });
 
@@ -145,6 +158,13 @@ window.onload = function init() {
                 keysDown[3] = false;
                 break;
         }
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        rotation += 0.3 * (origX - e.clientX);
+        rotation %= 360.0;
+        console.log(rotation);
+        origX = e.clientX;
     });
 
     animate();
@@ -314,29 +334,41 @@ function resetBoard() {
 
 function movePacMan() {
     // Áður en að ég færi pacman þá tékka ég hvort næsta move valdi collision og færi þá ekkiki
-    
-    if (keysDown[0]) {
-        if (!nextMoveCollisionWalls(pacmanPosX - pacmanSpeed, pacmanPosY)) {
-            pacmanPosX -= pacmanSpeed;
+    if (viewPoint === 0) {
+        if (keysDown[0]) {
+            if (!nextMoveCollisionWalls(pacmanPosX - pacmanSpeed, pacmanPosY)) {
+                pacmanPosX -= pacmanSpeed;
+            }
         }
-    }
 
-    if (keysDown[1]) {
-        if (!nextMoveCollisionWalls(pacmanPosX, pacmanPosY + pacmanSpeed)) {
-            pacmanPosY += pacmanSpeed;
+        if (keysDown[1]) {
+            if (!nextMoveCollisionWalls(pacmanPosX, pacmanPosY + pacmanSpeed)) {
+                pacmanPosY += pacmanSpeed;
+            }
         }
-    }
 
-    if (keysDown[2]) {
-        if (!nextMoveCollisionWalls(pacmanPosX + pacmanSpeed, pacmanPosY)) {
-            pacmanPosX += pacmanSpeed;
+        if (keysDown[2]) {
+            if (!nextMoveCollisionWalls(pacmanPosX + pacmanSpeed, pacmanPosY)) {
+                pacmanPosX += pacmanSpeed;
+            }
         }
-    }
 
-    if (keysDown[3]) {
-        if (!nextMoveCollisionWalls(pacmanPosX, pacmanPosY - pacmanSpeed)) {
-            pacmanPosY -= pacmanSpeed;
+        if (keysDown[3]) {
+            if (!nextMoveCollisionWalls(pacmanPosX, pacmanPosY - pacmanSpeed)) {
+                pacmanPosY -= pacmanSpeed;
+            }
         }
+    } else if (viewPoint === 1 || viewPoint === 2) {   
+        if (keysDown[1]) {
+            const movementX = Math.cos(rotation * Math.PI / 180) * pacmanSpeed;
+            const movementY = Math.sin(rotation * Math.PI / 180) * pacmanSpeed;
+            if (!nextMoveCollisionWalls(pacmanPosX + movementX, pacmanPosY + movementY)) {
+                pacmanPosX += movementX;
+                pacmanPosY += movementY;
+            }
+        }
+    } else if (viewPoint === 2) {
+
     }
 
     pacmanMesh.position.set(pacmanPosX, pacmanPosY, 0);
@@ -385,54 +417,38 @@ function moveEnemies() {
 }
 
 function moveCamera() {
-    const epsilon = 0.001;
-
-    // Ef pakkmann er að færast meðfram x-ásnum
-    if (keysDown[0] || keysDown[2]) {
-        if (cameraPositionX < pacmanPosX) {
-            if (currentCameraSpeedX < pacmanSpeed) {
-                currentCameraSpeedX += cameraAcceleration;
-            }
-        }
-
-        if (cameraPositionX > pacmanPosX) {
-            if (currentCameraSpeedX > -pacmanSpeed) {
-                currentCameraSpeedX -= cameraAcceleration;
-            }
-        }
-    } else {
-        if (currentCameraSpeedX < 0 - epsilon) {
-            currentCameraSpeedX += cameraAcceleration;
-        } else if (currentCameraSpeedX > 0 + epsilon) {
-            currentCameraSpeedX -= cameraAcceleration;
-        } 
+    if(viewPoint == 0) {
+        camera.up.set(0, 1, 0);
+        camera.position.lerp(new THREE.Vector3(pacmanPosX, pacmanPosY, 30), 0.05);
+    } else if (viewPoint == 1) {
+        const camLookX = pacmanPosX + 5 * Math.cos(rotation * Math.PI / 180);
+        const camLookY = pacmanPosY + 5 * Math.sin(rotation * Math.PI / 180);
+        camera.position.set(pacmanPosX, pacmanPosY, 1.5);
+        camera.up.set(0, 0, 1);
+        camera.lookAt(camLookX, camLookY, 0);
+    } else if (viewPoint === 2) {
+        const camLookX = pacmanPosX + 5 * Math.cos(rotation * Math.PI / 180);
+        const camLookY = pacmanPosY + 5 * Math.sin(rotation * Math.PI / 180);
+        camera.up.set(0, 0, 1);
+        camera.position.set(pacmanPosX - 5 * Math.cos(rotation * Math.PI / 180), pacmanPosY - 5 * Math.sin(rotation * Math.PI / 180), 5);
+        camera.lookAt(camLookX, camLookY, 0);
     }
+}
 
-    // Ef pakkmann er að færast meðfram y-ásnum
-    if (keysDown[1] || keysDown[3]) {
-        if (cameraPositionY < pacmanPosY) {
-            if (currentCameraSpeedY < pacmanSpeed) {
-                currentCameraSpeedY += cameraAcceleration;
-            }
-        }
+function setViewPoint(point) {
+    viewPoint = point;
 
-        if (cameraPositionY > pacmanPosY) {
-            if (currentCameraSpeedY > -pacmanSpeed) {
-                currentCameraSpeedY -= cameraAcceleration;
-            }
-        }
-    } else {
-        if (currentCameraSpeedY < 0 - epsilon) {
-            currentCameraSpeedY += cameraAcceleration;
-        } else if (currentCameraSpeedY > 0 + epsilon) {
-            currentCameraSpeedY -= cameraAcceleration;
-        } 
+    if (viewPoint === 0) {
+        pacmanMesh.material.transparent = false;
+        camera.lookAt(pacmanPosX, pacmanPosY, 0);
+        camera.up.set(0, 1, 0);
+    } else if (viewPoint === 1) {
+        pacmanMesh.material.opacity = 0;
+        camera.up.set(0, 0, 1);
+    } else if (viewPoint === 2) {
+        pacmanMesh.material.transparent = false;
+        camera.up.set(0, 0, 1);
     }
-
-    cameraPositionX += currentCameraSpeedX;
-    cameraPositionY += currentCameraSpeedY;
-
-    camera.position.lerp(new THREE.Vector3(pacmanPosX, pacmanPosY, 30), 0.05);
 }
 
 function startNewGame() {
